@@ -1,3 +1,4 @@
+import { InlineMarkdown } from '@/components/Markdown'
 import { formatType } from '@/lib/pulumi/format'
 import { formatPropertyName } from '@/lib/pulumi/naming'
 import { resolveDescription } from '@/lib/pulumi/description'
@@ -39,7 +40,11 @@ export function PropertyTable({
                 <code>{formatType(prop)}</code>
               </td>
               <td>{requiredSet.has(name) ? 'yes' : 'no'}</td>
-              <td>{resolveDescription(prop.description, runtime) ?? ''}</td>
+              <td>
+                <InlineMarkdown
+                  text={resolveDescription(prop.description, runtime)}
+                />
+              </td>
             </tr>
           )
         })}

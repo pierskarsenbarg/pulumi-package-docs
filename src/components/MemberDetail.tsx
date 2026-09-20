@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import { CodeExample } from '@/components/CodeExample'
+import { Markdown } from '@/components/Markdown'
 import { PropertyTable } from '@/components/PropertyTable'
 import { resolveDescription } from '@/lib/pulumi/description'
 import {
@@ -64,9 +65,7 @@ export function MemberDetail({
         </p>
       )}
 
-      {prose?.split(/\n{2,}/).map((paragraph, i) => (
-        <p key={i}>{paragraph}</p>
-      ))}
+      <Markdown text={prose} />
 
       <h2>Example</h2>
       <CodeExample example={example} />
