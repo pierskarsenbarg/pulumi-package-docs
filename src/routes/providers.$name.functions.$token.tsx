@@ -1,20 +1,14 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 
 import { MemberDetail } from '@/components/MemberDetail'
-import { getProvider } from '@/lib/pulumi/api'
-import { tokenDisplayName } from '@/lib/pulumi/token'
+import { getProviderView } from '@/lib/pulumi/api'
 
 export const Route = createFileRoute('/providers/$name/functions/$token')({
   loader: async ({ params }) => {
-    const entry = await getProvider({ data: params.name })
-    const fn = entry?.schema?.functions?.[params.token]
+    const view = await getProviderView({ data: params.name })
+    const fn = view?.functions.find((f) => f.token === params.token)
     if (!fn) throw notFound()
-    return {
-      providerName: params.name,
-      token: params.token,
-      fn,
-      runtime: entry?.runtime,
-    }
+    return { providerName: params.name, fn }
   },
   component: FunctionDetail,
   notFoundComponent: () => (
@@ -28,20 +22,9 @@ export const Route = createFileRoute('/providers/$name/functions/$token')({
 })
 
 function FunctionDetail() {
-  const { providerName, token, fn, runtime } = Route.useLoaderData()
+  const { providerName, fn } = Route.useLoaderData()
 
   return (
-    <MemberDetail
-      providerName={providerName}
-      kind="Function"
-      displayName={tokenDisplayName(token)}
-      token={token}
-      description={fn.description}
-      runtime={runtime}
-      inputProperties={fn.inputs?.properties}
-      requiredInputs={fn.inputs?.required}
-      outputProperties={fn.outputs?.properties}
-      requiredOutputs={fn.outputs?.required}
-    />
+    <MemberDetail providerName={providerName} kind="Function" member={fn} />
   )
 }

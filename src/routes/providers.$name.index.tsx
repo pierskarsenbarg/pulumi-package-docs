@@ -1,17 +1,14 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 
-import { InlineMarkdown, Markdown } from '@/components/Markdown'
-import { getProvider } from '@/lib/pulumi/api'
-import { resolveDescription } from '@/lib/pulumi/description'
-import { summarizeDescription } from '@/lib/pulumi/examples'
-import { tokenDisplayName } from '@/lib/pulumi/token'
-import type { SchemaFunction, SchemaResource } from '@/lib/pulumi/types'
+import { Html } from '@/components/Html'
+import { getProviderView } from '@/lib/pulumi/api'
+import type { MemberView } from '@/lib/pulumi/api'
 
 export const Route = createFileRoute('/providers/$name/')({
   loader: async ({ params }) => {
-    const entry = await getProvider({ data: params.name })
-    if (!entry) throw notFound()
-    return entry
+    const view = await getProviderView({ data: params.name })
+    if (!view) throw notFound()
+    return view
   },
   component: ProviderDetail,
   notFoundComponent: () => (
@@ -25,44 +22,32 @@ export const Route = createFileRoute('/providers/$name/')({
 })
 
 function MemberListItem({
-  token,
   member,
-  runtime,
   to,
   providerName,
 }: {
-  token: string
-  member: SchemaResource | SchemaFunction
-  runtime?: string
+  member: MemberView
   to: '/providers/$name/resources/$token' | '/providers/$name/functions/$token'
   providerName: string
 }) {
-  const summary = summarizeDescription(
-    resolveDescription(member.description, runtime),
-  )
-  const deprecated = 'deprecationMessage' in member && member.deprecationMessage
-
   return (
     <li className="doc-list-item">
-      <Link to={to} params={{ name: providerName, token }}>
-        <code>{tokenDisplayName(token)}</code>
+      <Link to={to} params={{ name: providerName, token: member.token }}>
+        <code>{member.name}</code>
       </Link>
-      {deprecated && <span className="badge badge-warning">Deprecated</span>}
-      {summary && (
-        <p className="doc-summary">
-          <InlineMarkdown text={summary} />
-        </p>
+      {member.deprecationMessage && (
+        <span className="badge badge-warning">Deprecated</span>
+      )}
+      {member.summaryHtml && (
+        <Html as="p" className="doc-summary" html={member.summaryHtml} />
       )}
     </li>
   )
 }
 
 function ProviderDetail() {
-  const entry = Route.useLoaderData()
-  const { ref, schema, origin, error, runtime } = entry
-
-  const resources = Object.entries(schema?.resources ?? {})
-  const functions = Object.entries(schema?.functions ?? {})
+  const view = Route.useLoaderData()
+  const { ref, origin, error, descriptionHtml, resources, functions } = view
 
   return (
     <main className="provider-detail">
@@ -76,7 +61,7 @@ function ProviderDetail() {
         {ref.parameters?.length ? ` (${ref.parameters.join(' ')})` : ''}
       </p>
 
-      {origin === 'error' || !schema ? (
+      {origin === 'error' ? (
         <p className="banner banner-failure">
           Failed to load schema: {error ?? 'unknown error'}
         </p>
@@ -88,21 +73,17 @@ function ProviderDetail() {
               on this load).
             </p>
           )}
-          {schema.description && (
-            <Markdown text={resolveDescription(schema.description, runtime)} />
-          )}
+          {descriptionHtml && <Html html={descriptionHtml} />}
 
           <h2>Resources</h2>
           {resources.length === 0 ? (
             <p className="empty-state">No resources.</p>
           ) : (
             <ul className="doc-list">
-              {resources.map(([token, resource]) => (
+              {resources.map((resource) => (
                 <MemberListItem
-                  key={token}
-                  token={token}
+                  key={resource.token}
                   member={resource}
-                  runtime={runtime}
                   to="/providers/$name/resources/$token"
                   providerName={ref.name}
                 />
@@ -115,12 +96,10 @@ function ProviderDetail() {
             <p className="empty-state">No functions.</p>
           ) : (
             <ul className="doc-list">
-              {functions.map(([token, fn]) => (
+              {functions.map((fn) => (
                 <MemberListItem
-                  key={token}
-                  token={token}
+                  key={fn.token}
                   member={fn}
-                  runtime={runtime}
                   to="/providers/$name/functions/$token"
                   providerName={ref.name}
                 />

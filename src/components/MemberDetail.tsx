@@ -1,45 +1,19 @@
 import { Link } from '@tanstack/react-router'
 
 import { CodeExample } from '@/components/CodeExample'
-import { Markdown } from '@/components/Markdown'
+import { Html } from '@/components/Html'
 import { PropertyTable } from '@/components/PropertyTable'
-import { resolveDescription } from '@/lib/pulumi/description'
-import {
-  extractExamples,
-  pickExample,
-  stripExamples,
-} from '@/lib/pulumi/examples'
-import type { SchemaProperty } from '@/lib/pulumi/types'
+import type { MemberView } from '@/lib/pulumi/api'
 
 export function MemberDetail({
   providerName,
   kind,
-  displayName,
-  token,
-  description,
-  deprecationMessage,
-  runtime,
-  inputProperties,
-  requiredInputs,
-  outputProperties,
-  requiredOutputs,
+  member,
 }: {
   providerName: string
   kind: 'Resource' | 'Function'
-  displayName: string
-  token: string
-  description?: string
-  deprecationMessage?: string
-  runtime?: string
-  inputProperties?: Record<string, SchemaProperty>
-  requiredInputs?: string[]
-  outputProperties?: Record<string, SchemaProperty>
-  requiredOutputs?: string[]
+  member: MemberView
 }) {
-  const resolved = resolveDescription(description, runtime)
-  const prose = stripExamples(resolved)
-  const example = pickExample(extractExamples(resolved), runtime)
-
   return (
     <main className="provider-detail">
       <Link
@@ -49,40 +23,32 @@ export function MemberDetail({
       >
         &larr; Back to {providerName}
       </Link>
-      <h1>{displayName}</h1>
+      <h1>{member.name}</h1>
       <p className="subtitle">
         <span
           className={`badge ${kind === 'Resource' ? 'badge-resource' : 'badge-function'}`}
         >
           {kind}
         </span>{' '}
-        &middot; <code>{token}</code>
+        &middot; <code>{member.token}</code>
       </p>
 
-      {deprecationMessage && (
+      {member.deprecationMessage && (
         <p className="banner banner-warning">
-          Deprecated: {deprecationMessage}
+          Deprecated: {member.deprecationMessage}
         </p>
       )}
 
-      <Markdown text={prose} />
+      {member.descriptionHtml && <Html html={member.descriptionHtml} />}
 
       <h2>Example</h2>
-      <CodeExample example={example} />
+      <CodeExample example={member.example ?? undefined} />
 
       <h2>Inputs</h2>
-      <PropertyTable
-        properties={inputProperties}
-        required={requiredInputs}
-        runtime={runtime}
-      />
+      <PropertyTable properties={member.inputs} />
 
       <h2>Outputs</h2>
-      <PropertyTable
-        properties={outputProperties}
-        required={requiredOutputs}
-        runtime={runtime}
-      />
+      <PropertyTable properties={member.outputs} />
     </main>
   )
 }

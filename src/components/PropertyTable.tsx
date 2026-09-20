@@ -1,22 +1,8 @@
-import { InlineMarkdown } from '@/components/Markdown'
-import { formatType } from '@/lib/pulumi/format'
-import { formatPropertyName } from '@/lib/pulumi/naming'
-import { resolveDescription } from '@/lib/pulumi/description'
-import type { SchemaProperty } from '@/lib/pulumi/types'
+import { Html } from '@/components/Html'
+import type { PropertyView } from '@/lib/pulumi/api'
 
-export function PropertyTable({
-  properties,
-  required,
-  runtime,
-}: {
-  properties?: Record<string, SchemaProperty>
-  required?: string[]
-  runtime?: string
-}) {
-  const names = Object.keys(properties ?? {})
-  if (names.length === 0) return <p className="empty-state">None</p>
-
-  const requiredSet = new Set(required ?? [])
+export function PropertyTable({ properties }: { properties: PropertyView[] }) {
+  if (properties.length === 0) return <p className="empty-state">None</p>
 
   return (
     <table className="props-table">
@@ -29,25 +15,18 @@ export function PropertyTable({
         </tr>
       </thead>
       <tbody>
-        {names.map((name) => {
-          const prop = properties![name]
-          return (
-            <tr key={name}>
-              <td>
-                <code>{formatPropertyName(name, runtime)}</code>
-              </td>
-              <td>
-                <code>{formatType(prop)}</code>
-              </td>
-              <td>{requiredSet.has(name) ? 'yes' : 'no'}</td>
-              <td>
-                <InlineMarkdown
-                  text={resolveDescription(prop.description, runtime)}
-                />
-              </td>
-            </tr>
-          )
-        })}
+        {properties.map((prop) => (
+          <tr key={prop.name}>
+            <td>
+              <code>{prop.name}</code>
+            </td>
+            <td>
+              <code>{prop.type}</code>
+            </td>
+            <td>{prop.required ? 'yes' : 'no'}</td>
+            <Html as="td" html={prop.descriptionHtml} />
+          </tr>
+        ))}
       </tbody>
     </table>
   )
