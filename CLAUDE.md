@@ -20,6 +20,7 @@ npm run lint          # oxlint
 npm run format          # oxfmt (write) then oxlint --fix
 npm run check          # oxfmt --check (CI-style format check)
 npm test              # vitest run (single run)
+npm run test:stdio      # smoke-test the --stdio entry points (needs build + compile:bun first)
 npm run test:watch      # vitest (watch mode)
 ```
 
@@ -74,4 +75,4 @@ New shared loading logic belongs in `providers.server.ts`; `api.ts` should stay 
 
 **Tests are Vitest, run against plain Node — not through TanStack Start.** `vitest.config.ts` is deliberately separate from `vite.config.ts` so the `tanstackStart()` plugin (which does its own client/SSR multi-environment build) isn't in the test run. Tests live next to the code they cover as `*.test.ts` (e.g. `src/lib/pulumi/format.test.ts`, `src/lib/pulumi/discovery.server.test.ts`) and only target the pure/Node-side logic in `src/lib/pulumi`, not the routes or React components. `mcp.server.test.ts` drives `createMcpServer()` through a real MCP client over `InMemoryTransport` — that only works because the server is transport-agnostic, so it doubles as a regression test against `mcp.server.ts` picking up a TanStack Start dependency again.
 
-**The stdio entry points are covered by a CI smoke test, not by Vitest.** `scripts/smoke-test-stdio.js` spawns a command as an MCP server and drives it with a real MCP client over stdio; both workflows run it against `node bin/cli.js --stdio` and the compiled Bun binary, after `npm run build`/`npm run compile:bun`. It's outside the Vitest suite because it needs those build artifacts, and it guards what unit tests can't: the `dist/mcp/stdio.js` path and export name that `bin/cli.js` depends on, the TypeScript-source path the Bun binary uses, and `--dir` plumbing. A handshake also fails fast if anything on the stdio path writes to stdout, since the client can't parse a stray banner as JSON-RPC.
+**The stdio entry points are covered by a CI smoke test, not by Vitest.** `scripts/smoke-test-stdio.js` spawns a command as an MCP server and drives it with a real MCP client over stdio. `npm run test:stdio` runs it against both `node bin/cli.js --stdio` and the compiled Bun binary, so it needs `npm run build` and `npm run compile:bun` to have run first; both test workflows call it after those steps. It's outside the Vitest suite because it needs those build artifacts, and it guards what unit tests can't: the `dist/mcp/stdio.js` path and export name that `bin/cli.js` depends on, the TypeScript-source path the Bun binary uses, and `--dir` plumbing. A handshake also fails fast if anything on the stdio path writes to stdout, since the client can't parse a stray banner as JSON-RPC.

@@ -34,6 +34,7 @@
     "start": "node bin/cli.js",
     "compile:bun": "node bin/generate-embedded-assets.js && bun build ./bin/cli-bun.js --compile --outfile pulumi-package-docs",
     "test": "vitest run",
+    "test:stdio": "node scripts/smoke-test-stdio.js node bin/cli.js --stdio && node scripts/smoke-test-stdio.js ./pulumi-package-docs --stdio",
     "test:watch": "vitest",
     "lint": "oxlint",
     "format": "oxfmt . && oxlint --fix",
