@@ -23,6 +23,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: npm run compile:bun
 
+      - run: npm run test:stdio
+
       - name: Smoke test compiled binary
         run: |
           ./pulumi-package-docs --port 3999 &
