@@ -18,6 +18,7 @@
   "files": [
     "bin",
     "dist",
+    "examples",
     "src",
     "tsconfig.json",
     "vite.config.ts"
@@ -32,6 +33,7 @@
     "build:mcp": "vite build --config vite.mcp.config.ts",
     "preview": "vite preview",
     "start": "node bin/cli.js",
+    "static": "node bin/cli.js static",
     "compile:bun": "node bin/generate-embedded-assets.js && bun build ./bin/cli-bun.js --compile --outfile pulumi-package-docs",
     "test": "vitest run",
     "test:stdio": "node scripts/smoke-test-stdio.js node bin/cli.js --stdio && node scripts/smoke-test-stdio.js ./pulumi-package-docs --stdio",

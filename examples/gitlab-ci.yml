@@ -1,0 +1,22 @@
+# Publishes the local provider docs for this Pulumi project to GitLab Pages.
+# Copy this job into your Pulumi project's .gitlab-ci.yml.
+pages:
+  image: node:24
+  stage: deploy
+  before_script:
+    # Puts the `pulumi` CLI on PATH; the docs are generated from the schemas
+    # it fetches for each package in Pulumi.yaml.
+    - curl -fsSL https://get.pulumi.com | sh
+    - export PATH="$PATH:$HOME/.pulumi/bin"
+  script:
+    # CI_PAGES_URL is where this site will be served from — its path is what
+    # the docs have to be built for ("/" with unique domains enabled, "/<project>/"
+    # otherwise).
+    - export DOCS_BASE="$(node -e 'console.log(new URL(process.env.CI_PAGES_URL).pathname)')"
+    - npx -y pulumi-package-docs static --out public --base "$DOCS_BASE"
+  artifacts:
+    paths:
+      # GitLab Pages publishes this directory, and only under this name.
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

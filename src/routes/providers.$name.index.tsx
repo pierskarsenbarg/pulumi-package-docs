@@ -3,7 +3,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { getProvider } from '@/lib/pulumi/api'
 import { resolveDescription } from '@/lib/pulumi/description'
 import { summarizeDescription } from '@/lib/pulumi/examples'
-import { tokenDisplayName } from '@/lib/pulumi/token'
+import { tokenDisplayName, tokenSlug } from '@/lib/pulumi/token'
 import type { SchemaFunction, SchemaResource } from '@/lib/pulumi/types'
 
 export const Route = createFileRoute('/providers/$name/')({
@@ -43,7 +43,7 @@ function MemberListItem({
 
   return (
     <li className="doc-list-item">
-      <Link to={to} params={{ name: providerName, token }}>
+      <Link to={to} params={{ name: providerName, token: tokenSlug(token) }}>
         <code>{tokenDisplayName(token)}</code>
       </Link>
       {deprecated && <span className="badge badge-warning">Deprecated</span>}

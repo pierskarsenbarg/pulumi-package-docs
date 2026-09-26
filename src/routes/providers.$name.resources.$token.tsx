@@ -2,16 +2,19 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 
 import { MemberDetail } from '@/components/MemberDetail'
 import { getProvider } from '@/lib/pulumi/api'
-import { tokenDisplayName } from '@/lib/pulumi/token'
+import { findTokenBySlug, tokenDisplayName } from '@/lib/pulumi/token'
 
 export const Route = createFileRoute('/providers/$name/resources/$token')({
   loader: async ({ params }) => {
     const entry = await getProvider({ data: params.name })
-    const resource = entry?.schema?.resources?.[params.token]
-    if (!resource) throw notFound()
+    const resources = entry?.schema?.resources
+    const token =
+      resources && findTokenBySlug(Object.keys(resources), params.token)
+    const resource = token ? resources[token] : undefined
+    if (!token || !resource) throw notFound()
     return {
       providerName: params.name,
-      token: params.token,
+      token,
       resource,
       runtime: entry?.runtime,
     }

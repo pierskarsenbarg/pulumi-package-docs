@@ -6,7 +6,8 @@ import {
 } from '@tanstack/react-router'
 
 import { PulumiLogo } from '@/components/PulumiLogo'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { StaticThemeToggle, ThemeToggle } from '@/components/ThemeToggle'
+import { isStaticDocs } from '@/lib/static-docs'
 import appCss from '../styles.css?url'
 
 // Runs before hydration so an explicit theme choice applies before first
@@ -57,12 +58,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               <span className="site-brand-divider" aria-hidden="true" />
               <span className="site-brand-name">Package Docs</span>
             </Link>
-            <ThemeToggle />
+            {isStaticDocs ? <StaticThemeToggle /> : <ThemeToggle />}
           </div>
         </header>
         {children}
 
-        <Scripts />
+        {/* A static build has no server to call back into, so it ships
+            without the hydration script and navigates as plain links. */}
+        {isStaticDocs ? null : <Scripts />}
       </body>
     </html>
   )

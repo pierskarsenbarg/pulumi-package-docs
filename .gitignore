@@ -14,3 +14,4 @@ todos.json
 bin/embedded-assets.generated.js
 pulumi-package-docs
 pulumi-package-docs.exe
+dist-static
