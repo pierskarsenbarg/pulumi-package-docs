@@ -38,9 +38,49 @@ function printMcpUrl(): Plugin {
   }
 }
 
+// Set by `pulumi-package-docs static` (see bin/static.js). A static build
+// prerenders every page to HTML under `dist-static/client` so the result can
+// be published to GitHub/GitLab Pages, where there's no server to render them.
+const staticDocs = process.env.VITE_STATIC_DOCS === 'true'
+// The path the site is served under, e.g. "/<repo>/" for a GitHub/GitLab
+// Pages project site. Vite prefixes asset URLs with it, and the router picks
+// it up as its basepath via `import.meta.env.BASE_URL`.
+const base = process.env.PULUMI_DOCS_BASE || '/'
+
 const config = defineConfig({
+  base,
+  // A static build goes to its own output directory, so generating a site
+  // never clobbers the `dist/` build that `pulumi-package-docs` serves.
+  ...(staticDocs
+    ? {
+        build: { outDir: 'dist-static' },
+        preview: { host: '127.0.0.1' },
+      }
+    : {}),
   resolve: { tsconfigPaths: true },
-  plugins: [tanstackStart(), viteReact(), printMcpUrl()],
+  plugins: [
+    tanstackStart(
+      staticDocs
+        ? {
+            // Crawling from the index reaches every provider page and, from
+            // there, every resource/function page — so the page list follows
+            // whatever the project's Pulumi.yaml declares, with nothing to
+            // enumerate here.
+            pages: [{ path: '/' }],
+            prerender: {
+              enabled: true,
+              crawlLinks: true,
+              failOnError: true,
+              // `/mcp` is a server endpoint (Streamable HTTP), not a page;
+              // there's nothing to prerender and no server to serve it from.
+              filter: (page) => page.path !== '/mcp',
+            },
+          }
+        : undefined,
+    ),
+    viteReact(),
+    printMcpUrl(),
+  ],
 })
 
 export default config

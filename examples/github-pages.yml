@@ -1,0 +1,56 @@
+# Publishes the local provider docs for this Pulumi project to GitHub Pages.
+# Copy to .github/workflows/docs.yml in your Pulumi project's repo, then enable
+# Pages for the repo with "Source: GitHub Actions" (Settings -> Pages).
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; don't cancel one that's already publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # Puts the `pulumi` CLI on PATH; the docs are generated from the schemas
+      # it fetches for each package in Pulumi.yaml.
+      - uses: pulumi/actions@v7
+
+      # A project site is served from https://<owner>.github.io/<repo>/, so the
+      # site is built for that path. For a user/org site (<owner>.github.io),
+      # drop --base.
+      - name: Generate docs
+        run: npx -y pulumi-package-docs static --out ./site --base "/${GITHUB_REPOSITORY#*/}/"
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: ./site
+          # The generated site includes a `.nojekyll` file, and this action
+          # drops dotfiles unless asked not to.
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

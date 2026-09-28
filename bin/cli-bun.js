@@ -9,6 +9,22 @@ if (options.help) {
   process.exit(0)
 }
 
+if (options.unknownCommand) {
+  console.error(`Unknown command: ${options.unknownCommand}\n`)
+  printHelp()
+  process.exit(1)
+}
+
+if (options.command === 'static') {
+  // Generating a site runs a Vite build, which isn't part of this standalone
+  // executable (it only carries the prebuilt server and its assets).
+  console.error(
+    'The standalone binary cannot generate a static site: it has no build toolchain.\n' +
+      'Run `npx pulumi-package-docs static` instead.',
+  )
+  process.exit(1)
+}
+
 process.env.PULUMI_LOCAL_DOCS_DIR = options.dir
 
 if (options.stdio) {
