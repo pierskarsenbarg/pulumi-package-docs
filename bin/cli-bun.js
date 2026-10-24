@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { spawn } from 'node:child_process'
-import { parseArgs, printHelp } from './args.js'
+import { parseArgs, printHelp, serveHostname } from './args.js'
 
 const options = parseArgs(process.argv.slice(2))
 
@@ -65,7 +65,7 @@ async function serveDocsSite() {
 
   const bunServer = Bun.serve({
     port: Number(options.port),
-    hostname: options.host ? '0.0.0.0' : undefined,
+    hostname: serveHostname(options),
     async fetch(request) {
       const url = new URL(request.url)
       const embeddedPath = embeddedAssets[url.pathname]
