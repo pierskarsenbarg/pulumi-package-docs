@@ -93,6 +93,8 @@ jobs:
           path: dist
 
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
 
       - run: node bin/generate-embedded-assets.js
 
