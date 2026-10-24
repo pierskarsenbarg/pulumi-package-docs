@@ -55,6 +55,14 @@ export function parseArgs(argv) {
   return options
 }
 
+/**
+ * The address the standalone binary's `Bun.serve` listens on. Bun treats a
+ * missing hostname as every interface, so loopback has to be explicit.
+ */
+export function serveHostname(options) {
+  return options.host ? '0.0.0.0' : '127.0.0.1'
+}
+
 export function printHelp() {
   console.log(`pulumi-package-docs [command] [options]
 

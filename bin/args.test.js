@@ -1,7 +1,17 @@
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-import { parseArgs } from './args.js'
+import { parseArgs, serveHostname } from './args.js'
+
+describe('serveHostname', () => {
+  it('listens on loopback only unless --host is passed', () => {
+    expect(serveHostname(parseArgs([]))).toBe('127.0.0.1')
+  })
+
+  it('listens on every interface with --host', () => {
+    expect(serveHostname(parseArgs(['--host']))).toBe('0.0.0.0')
+  })
+})
 
 describe('parseArgs', () => {
   it('defaults to serving the current directory', () => {
